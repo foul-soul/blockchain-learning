@@ -1,2 +1,2 @@
 #blockchain-learning
-#this repository is created during blockchain course
+this repository is created during blockchain course
