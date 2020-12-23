@@ -1,28 +1,30 @@
-# creating a block chain in python
-# installed
-# flask
-# postman HTTP client
-
+# creating a cryptocurrency in python
+# install requests, flask
 import datetime
 import hashlib
 import json
-from flask import Flask, jsonify
-
-# part-1 building a blockchain
+from flask import Flask, jsonify, request
+import requests
+from uuid import uuid4
+from urllib.parse import urlparse
 
 
 class Blockchain:  # block chain class
 
     def __init__(self):  # class always start with init function and always take self argument
         self.chain = []  # initialize the blockchain list
+        self.transactions=[]
         self.create_block(proof=1, previous_hash='0')  # create the genesis block
+        self.nodes = set()
 
     def create_block(self, proof, previous_hash):  # create a new block with the help of proof, previous hash
         block = {'index': len(self.chain)+1,           # essential data of block will be saved in dictionary
                  'timestamp': str(datetime.datetime.now()),
                  'proof': proof,
                  'previous_hash': previous_hash,
+                 'transactions': self.transactions
                  }
+        self.transactions = []         
         self.chain.append(block)  # append new block in chain
         return block
 
@@ -60,11 +62,43 @@ class Blockchain:  # block chain class
             block_index += 1
         return True
 
+    def add_transaction(self, sender, reciever, amount):
+        self.transactions.append({'sender' : sender, 'reciever':reciever, 'amount': amount})
+        previous_block =self.get_previous_block()
+        return previous_block['index'] +1
+
+    def add_node(self, address):
+        parsed_url = urlparse(address)
+        self.nodes.add(parsed_url.netloc)
+
+    def replace_chain(self):
+        network = self.nodes
+        longest_chain = None
+        max_length = len(self.chain)
+        for node in network:
+            response = requests.get(f'http://{node}/get_chain')
+            if response.status_code == 200:
+                length = response.json()['length']
+                chain = response.json()['chain']
+                if length > max_length and self.is_chain_valid(chain):
+                    max_length = length
+                    longest_chain = chain
+        if longest_chain:
+            self.chain = longest_chain
+            return True
+        return False                
+
+
+
 
 # part-2 Mining our blockchain
 
-# creating web app with flask
+# creating flask app
 app = Flask(__name__)
+
+# creating a address for the node on port 5000
+node_address = str(uuid4()).replace('-', '') 
+
 
 # creating blockchain
 blockchain = Blockchain()
@@ -78,12 +112,14 @@ def mine_block():
     previous_proof = previous_block['proof']
     proof = blockchain.proof_of_work(previous_proof)
     previous_hash = blockchain.hash(previous_block)
+    blockchain.add_transaction(sender = node_address, reciever = 'manish', amount = 1)
     block = blockchain.create_block(proof, previous_hash)
     response = {'message': "congratulation you have mined a block!",
                 'index': block['index'],
                 'timestamp': block['timestamp'],
                 'proof': block['proof'],
-                'previous_hash': block['previous_hash']}
+                'previous_hash': block['previous_hash'],
+                'transactions': block['transactions']}
     return jsonify(response), 200
 
 
@@ -104,6 +140,17 @@ def is_valid():
     else:
         response = {'message': 'Blockchain is invalid. someone interrupted with chain'}
     return jsonify(response), 200
+
+#adding a new transaction to blockchain
+@app.route('/add_transaction', methods =['POST'])
+def add_transaction():
+    json = request.get_json()
+    transaction_keys = ['sender', 'reciever', 'amount']
+    if not all (key in json for key in transaction_keys):
+        return 'some elements of transactions are missing', 400
+    index = blockchain.add_transaction(transaction_keys['sender'], transaction_keys['reciever'])    
+
+# part-3 decentralizing our blockchain
 
 
 # running the flask app
