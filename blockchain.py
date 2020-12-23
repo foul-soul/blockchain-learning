@@ -63,7 +63,7 @@ class Blockchain:  # block chain class
 
 # part-2 Mining our blockchain
 
-# creating web app with flask
+# creating flask app
 app = Flask(__name__)
 
 # creating blockchain
