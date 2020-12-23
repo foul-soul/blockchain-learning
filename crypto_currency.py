@@ -148,7 +148,7 @@ def add_transaction():
     transaction_keys = ['sender', 'reciever', 'amount']
     if not all (key in json for key in transaction_keys):
         return 'some elements of transactions are missing', 400
-    index = blockchain.add_transaction(transaction_keys['sender'], transaction_keys['reciever'])    
+    index = blockchain.add_transaction(transaction_keys['sender'], transaction_keys['reciever'], transaction_keys['amount'])    
 
 # part-3 decentralizing our blockchain
 
