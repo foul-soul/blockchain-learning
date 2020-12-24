@@ -167,7 +167,7 @@ def connect_node():
                 'total_nodes': list(blockchain.nodes)}
     return jsonify(response), 201
 
-@app.route('/replace_chain', method =['GET'])
+@app.route('/replace_chain', methods =['GET'])
 def replace_chain():
     is_chain_replaced = blockchain.replace_chain()
     if is_chain_replaced:
