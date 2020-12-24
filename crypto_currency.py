@@ -148,10 +148,34 @@ def add_transaction():
     transaction_keys = ['sender', 'reciever', 'amount']
     if not all (key in json for key in transaction_keys):
         return 'some elements of transactions are missing', 400
-    index = blockchain.add_transaction(transaction_keys['sender'], transaction_keys['reciever'], transaction_keys['amount'])    
+    index = blockchain.add_transaction(transaction_keys['sender'], transaction_keys['reciever'], transaction_keys['amount'])
+    response = {'message': f'this transaction will be added to block {index}'}
+    return jsonify(response), 201
 
 # part-3 decentralizing our blockchain
 
+# connecting new nodes
+@app.route('/connect_node', methods =['POST'])
+def connect_node():
+    json = request.get_json()
+    nodes = json.get('nodes')
+    if nodes is None:
+        return 'no node', 400
+    for node in nodes:
+        blockchain.add_node(node)
+    response = {'message': 'all the nodes are connected. the blockchain contains: ',
+                'total_nodes': list(blockchain.nodes)}
+    return jsonify(response), 201
 
+@app.route('/replace_chain', method =['GET'])
+def replace_chain():
+    is_chain_replaced = blockchain.replace_chain()
+    if is_chain_replaced:
+        response = {'message': 'the node have diffrent chains so the chain is replaced by the longest valid chain',
+                    'new_chain': blockchain.chain}
+    else:
+        response = {'message': 'All good, the chain is the longest one',
+                    'new_chain': blockchain.chain}
+    return jsonify(response), 200
 # running the flask app
 app.run(host='0.0.0.0', port=5000)
