@@ -1,2 +1,5 @@
 #blockchain-learning
-this repository is created during blockchain course
+this repo is created while learning blockchain
+full documentation is remaining will be up asap
+
+
